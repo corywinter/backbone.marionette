@@ -45,7 +45,9 @@ Marionette.LayoutView = Marionette.ItemView.extend({
   destroy: function() {
     if (this.isDestroyed) { return this; }
 
+    this.off(this.regionManager);
     this.regionManager.destroy();
+
     return Marionette.ItemView.prototype.destroy.apply(this, arguments);
   },
 
@@ -139,6 +141,29 @@ Marionette.LayoutView = Marionette.ItemView.extend({
     return new Marionette.RegionManager();
   },
 
+  // Internal method to handle the dispatching of events
+  // that occured with a region or on a region to the top
+  // level `regionEvents` interface. This allows for an
+  // abstact event registration without having to reach
+  // into the internals of the regions `currentView`.
+  _onRegionsEvent: function(eventName) {
+
+    // ## TODO / Ideas
+    // * [ ] handle method def of regionEvent
+    // * [ ] handle string based regionEvent
+    // * [ ] handle regionEvents via options
+    // * [ ] handle `all` based registration
+    // * [ ] ensure we are not introducing memory leaks
+    // * [ ] know which region is emitting the event
+    // * [ ] addRegionEvent
+    // * [ ] addRegionEvents
+    // * [ ] removeRegionEvent
+    // * [ ] removeRegionEvents
+
+    if (this.regionEvents && this.regionEvents[eventName]) {
+      this.regionEvents[eventName].apply(this, arguments);
+    }
+  },
   // Internal method to initialize the region manager
   // and all regions in it
   _initRegionManager: function() {
@@ -161,5 +186,7 @@ Marionette.LayoutView = Marionette.ItemView.extend({
       delete this[name];
       this.triggerMethod('remove:region', name, region);
     });
+
+    this.listenTo(this.regionManager, 'all', this._onRegionsEvent);
   }
 });

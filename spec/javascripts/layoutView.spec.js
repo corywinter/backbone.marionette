@@ -439,4 +439,46 @@ describe('layoutView', function() {
       expect(this.regions.regionTwo).to.equal(this.layout.getRegion("regionTwo"));
     });
   });
+
+  describe("region events", function() {
+    beforeEach(function() {
+      var suite = this;
+      this.viewRegionShowSpy  = sinon.spy();
+      this.regionShowSpy      = sinon.spy();
+
+      this.ItemView = Marionette.ItemView.extend({
+        template: false
+      });
+
+      this.Layout = Marionette.LayoutView.extend({
+        template: suite.layoutViewManagerTemplateFn,
+        regionEvents: {
+          "view:show": suite.viewRegionShowSpy,
+          "show": suite.regionShowSpy
+        },
+
+        regions: {
+          "oneRegion": "#regionOne",
+          "twoRegion": "#regionTwo"
+        },
+
+        onShow: function() {
+          this.oneRegion.show(new suite.ItemView());
+          this.twoRegion.show(new suite.ItemView());
+        }
+      });
+
+      this.layout = new this.Layout();
+      this.layout.render();
+      this.layout.triggerMethod("show");
+    });
+
+    it("should call show when views are shown within regions", function() {
+      expect(this.viewRegionShowSpy).to.have.been.calledTwice;
+    });
+
+    it("should call show on regions when views are shown within", function() {
+      expect(this.regionShowSpy).to.have.been.calledTwice;
+    });
+  });
 });
